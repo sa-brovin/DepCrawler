@@ -1,0 +1,15 @@
+{
+    "dns": "192.168.111.1",
+    "apps": [
+	{
+            "name": "aks_dispatch",
+            "repo": "git@gitlab.com:kconcern/aks-dispatch.git",
+            "branch": "master",
+            "docker_template": "node8-oracle",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist"
+        }
+        
+    ]
+}
+

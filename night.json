@@ -1,0 +1,371 @@
+{
+    "smtp": {
+        "host": "smtp.yandex.ru",
+        "port": 465,
+        "user": "gitlab-runner@business-software.ru",
+        "passwd": "guz5Raj2oobo6Heib0Ei",
+        "fromaddr": "gitlab-runner@business-software.ru",
+        "toaddrs": [
+            "vberesnev@business-software.ru",
+            "pkuznecov@business-software.ru",
+            "aberesnev@business-software.ru",
+            "maizatullin@business-software.ru",
+            "fkazakov@business-software.ru",
+            "avechtomov@business-software.ru",
+            "prudenko@business-software.ru",
+            "vrupasova@business-software.ru",
+            "polischuk@business-software.ru"
+        ]
+    },
+    "dns": "192.168.111.1",
+    "max_days": 1,
+    "apps": [
+        {
+            "name": "aks_adapter_sap",
+            "repo": "git@gitlab.com:kconcern/aks-adapter-sap.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "volumes": [
+                "/var/lib/aks-adapter-sap/exchange:/app/exchange:rw"
+            ],
+            "port": "1360",
+            "inner_port": "1360"
+        },
+        {
+            "name": "aks_jira_watchdog",
+            "repo": "git@gitlab.com:kconcern/aks-jira-watchdog.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            }
+        },
+        {
+            "name": "aks_order_listener",
+            "repo": "git@gitlab.com:kconcern/aks-order-listener.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            }
+        },
+        {
+            "name": "aks_order_web",
+            "repo": "git@gitlab.com:kconcern/aks-order-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1338",
+            "inner_port": "1338"
+        },
+        {
+            "name": "aks_adapter_jira",
+            "repo": "git@gitlab.com:kconcern/aks-adapter-jira.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1340",
+            "inner_port": "1340"
+        },
+        {
+            "name": "aks_dinsurvey_web",
+            "repo": "git@gitlab.com:kconcern/aks-dinsurvey-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1341",
+            "inner_port": "1341"
+        },
+        {
+            "name": "aks_monitor_web",
+            "repo": "git@gitlab.com:kconcern/aks-monitor-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "volumes": [
+                "/var/lib/aks-monitor-web/maps:/app/maps:ro"
+            ],
+            "port": "1342",
+            "inner_port": "1342"
+        },
+        {
+            "name": "aks_transition_web",
+            "repo": "git@gitlab.com:kconcern/aks-transition-web.git",
+            "branch": "develop",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node-sap",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1343",
+            "inner_port": "1343"
+        },
+        {
+            "name": "aks_opc_web",
+            "repo": "git@gitlab.com:kconcern/aks-opc-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1344",
+            "inner_port": "1344"
+        },
+        {
+            "name": "aks_adapter_opc",
+            "repo": "git@gitlab.com:kconcern/aks-adapter-opc.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1345",
+            "inner_port": "1345"
+        },
+        {
+            "name": "aks_auth_service",
+            "repo": "git@gitlab.com:kconcern/aks-auth-service.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "volumes": [
+                "/var/lib/aks-auth-service/exchange:/app/import_data:rw"
+            ],
+            "port": "1346",
+            "inner_port": "1346"
+        },
+        {
+            "name": "aks_admin_web",
+            "repo": "git@gitlab.com:kconcern/aks-admin-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1347",
+            "inner_port": "1347"
+        },
+        {
+            "name": "aks_adapter_1c_toir",
+            "repo": "git@gitlab.com:kconcern/aks-adapter-1c-toir.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-sqlldr-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1348",
+            "inner_port": "1348",
+            "volumes": [
+                "/var/lib/aks-adapter-1c-toir/exchange:/app/exchange:rw",
+                "/var/lib/aks-adapter-1c-toir/updates:/app/updates:rw",
+                "/var/lib/aks-adapter-1c-toir/maps:/app/maps:rw"
+            ]
+        },
+        {
+            "name": "aks_dispatch",
+            "repo": "git@gitlab.com:kconcern/aks-dispatch.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1350",
+            "inner_port": "1350"
+        },
+        {
+            "name": "aks_3d_structure_api",
+            "repo": "git@gitlab.com:kconcern/aks-3d-structure-api.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node-oracle-sqlldr-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1351",
+            "inner_port": "1351",
+            "volumes": [
+                "/var/lib/aks-3d-structure-api/exchange:/app/exchange:rw",
+                "/var/lib/aks-3d-structure-api/public/photo:/app/public/photo:rw"
+            ]
+        },
+        {
+            "name": "aks_inventory",
+            "repo": "git@gitlab.com:kconcern/aks-inventory.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1352",
+            "inner_port": "1352",
+            "volumes": [
+                "/var/lib/aks-inventory/exchange:/app/import_data:rw",
+                "/var/lib/aks-inventory/updates:/app/client_updates:rw"
+            ]
+        },
+        {
+            "name": "aks_tool_keeper_web",
+            "repo": "git@gitlab.com:kconcern/aks-tool-keeper-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1353",
+            "inner_port": "1353"
+        },
+        {
+            "name": "aks_schedule",
+            "repo": "git@gitlab.com:kconcern/aks-schedule-service.git",
+            "branch": "master",
+            "version_cmd": "cd source; docker run -ti --rm --volume=\"$HOME/.m2:/root/.m2:rw\" --volume=\"$(pwd):/usr/src/app:rw\" maven:3.3.9-onbuild mvn versions:set -DnewVersion={version}; cd ..",
+            "docker_template": "java-schedule",
+            "buildcmd": "cd source; docker run -ti --rm --volume=\"$HOME/.m2:/root/.m2:rw\" --volume=\"$(pwd):/usr/src/app:rw\" maven:3.3.9-onbuild mvn install; docker run -ti --rm --volume=\"$(pwd):/usr/src/app:rw\" maven:3.3.9-onbuild chown -R $(id -u) /usr/src/app; cd ..",
+            "builddir": "source/scheduler-ear",
+            "envvars": {
+                "TZ": "Europe/Samara",
+                "JAVA_OPTS": "-Xms1g -Xmx2g"
+            },
+            "port": "1354",
+            "inner_port": "8080"
+        },
+        {
+            "name": "aks_adapter_pdm",
+            "repo": "git@gitlab.com:kconcern/aks-adapter-pdm.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-sqlldr-im-gs-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1355",
+            "inner_port": "1355",
+            "volumes": [
+                "/var/lib/aks-adapter-pdm/exchange:/app/exchange:rw"
+            ]
+        },
+        {
+            "name": "kmeeting_api",
+            "repo": "git@gitlab.com:kconcern/kmeeting-api.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1356",
+            "inner_port": "1356"
+        },
+        {
+            "name": "kmeeting_notification",
+            "repo": "git@gitlab.com:kconcern/kmeeting-notification.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1357",
+            "inner_port": "1357"
+        },
+        {
+            "name": "kmeeting_web",
+            "repo": "git@gitlab.com:kconcern/kmeeting-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "nginx-frontend",
+            "buildcmd": "npm install && npm run build:dist && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1358",
+            "inner_port": "80"
+        },
+        {
+            "name": "aks_sms_service",
+            "repo": "git@gitlab.com:kconcern/aks-sms-service.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node-oracle-nightly",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1359",
+            "inner_port": "80"
+        },
+        {
+            "name": "aks_notify_service",
+            "repo": "git@gitlab.com:kconcern/aks-notify-service.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1361",
+            "inner_port": "1361"
+        },
+        {
+            "name": "belgiss_proxy",
+            "repo": "git@gitlab.com:kconcern/bs-belgiss-proxy.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node-simple",
+            "envvars": {
+                "TZ": "Europe/Samara",
+                "LOCAL_URI": "http://192.168.111.24:3000/"
+            },
+            "port": "3000",
+            "inner_port": "3000"
+        }
+    ]
+}

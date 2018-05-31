@@ -1,0 +1,56 @@
+{
+    "smtp": {
+        "host": "smtp.yandex.ru",
+        "port": 465,
+        "user": "gitlab-runner@business-software.ru",
+        "passwd": "guz5Raj2oobo6Heib0Ei",
+        "fromaddr": "gitlab-runner@business-software.ru",
+        "toaddrs": [
+            "vberesnev@business-software.ru",
+            "pkuznecov@business-software.ru",
+            "aberesnev@business-software.ru",
+            "maizatullin@business-software.ru",
+            "fkazakov@business-software.ru",
+            "avechtomov@business-software.ru",
+            "prudenko@business-software.ru",
+            "vrupasova@business-software.ru",
+            "polischuk@business-software.ru"
+        ]
+    },
+    "dns": "192.168.111.1",
+    "max_days": 1,
+    "apps": [
+
+        {
+            "name": "aks_order_web",
+            "repo": "git@gitlab.com:kconcern/aks-order-web.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1338",
+            "inner_port": "1338"
+        },
+       
+
+
+        {
+            "name": "aks_dispatch",
+            "repo": "git@gitlab.com:kconcern/aks-dispatch.git",
+            "branch": "master",
+            "version_cmd": "npm version --no-git-tag-version {version}",
+            "docker_template": "node8-oracle-nightly",
+            "buildcmd": "npm install && npm run build:gulp && rm -rf node_modules",
+            "builddir": "dist",
+            "envvars": {
+                "TZ": "Europe/Samara"
+            },
+            "port": "1350",
+            "inner_port": "1350"
+        }
+]
+}
