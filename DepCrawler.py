@@ -321,7 +321,7 @@ def main():
 
     # Debug only
     options.config = "./aks-dispatch.json"
-    #options.config = "./night.json"
+    options.config = "./night2.json"
 
     config = get_config(options.config) if options.config else {}
 
