@@ -1,29 +1,29 @@
 import subprocess
-import re
 import json
 import argparse
 import logging
 import sys
 import os
 import shutil
+import re
 from collections import defaultdict
 
-# libraries
+# graph libraries
 from plotly.graph_objs import *
 import networkx as nx
 import matplotlib.pyplot as plt
-
 from networkx.drawing.nx_agraph import write_dot
 
 pack_dep_node_name = "dependencies"
 pack_devDep_node_name = "devDependencies"
 common_repo_address = "git@gitlab.business-software.ru:kconcern/"
 logger_name = "common"
-logger = logging.getLogger(logger_name)
 logs_dir = "./logs/"
 projects_dir = "projects"
-projects = {}
+diagrams_dir = "diagrams"
 
+logger = logging.getLogger(logger_name)
+projects = {}
 G = nx.DiGraph()
 
 
@@ -86,7 +86,7 @@ def get_last_tag_from_remote_repo(project_name):
     output = subprocess.getoutput(
         "git ls-remote --tags {0}{1}.git| grep -o \'[^\\/]*$\' | sort -rV | head -n 1".format(
             common_repo_address, project_name))
-    logger.debug("\t{0:25s}{1:12s}".format(project_name, output))
+    # logger.debug("\t{0:25s}{1:12s}".format(project_name, output))
     return output
 
 
@@ -100,15 +100,12 @@ def is_last_commit_equal_last_tag(project_name, last_commit_sha):
         "git ls-remote --tags {0}{1}.git | grep {2} | grep -o '[^\/]*$'".format(
             common_repo_address, project_name, last_commit_sha))
     if not tag_of_last_commit:
-        logger.warning("\t{0:68s}Last commit is not tagged.".format(project_name))
         return False, ""
 
     last_tag = get_last_tag_from_remote_repo(project_name)
     if tag_of_last_commit == last_tag:
         return True, last_tag
     else:
-        logger.warning("\t{0:68s}Last commit tag ({1}) is not equal last tag ({2})".format(
-            project_name, tag_of_last_commit, last_tag))
         return False, ""
 
 
@@ -190,7 +187,19 @@ def set_new_dependency_version(json_path, dependency_root_node, dep_name, new_ve
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', dest='config', help='configuration JSON-file')
+
+    parser.add_argument('--error', dest='report_level', const="error", action='store_const', default="warning",
+                        help='Show only errors on diagram.')
+    parser.add_argument('--warning', dest='report_level', const="warning", action='store_const', default="warning",
+                        help='Show errors and warnings on diagram.')
+    parser.add_argument('--info', dest='report_level', const="info", action='store_const', default="warning",
+                        help='Show all on diagram.')
+
+    parser.add_argument('--diag', dest='display_diag', const="display_diag", action='store_const', default=False,
+                        help='Show diagram.')
+
     parser.add_argument('applications', nargs='*', help='Limit applications from config to build')
+    parser.print_help()
     return parser.parse_args()
 
 
@@ -265,9 +274,24 @@ def get_dependency_projects(current_project_name_version):
                                                                            "bower.json", pack_dep_node_name))
 
 
-def do_good(current_project_name_version):
+def add_edge(source, target, msg, color, edge_type, opt):
+    if opt.report_level == "error" and edge_type == "error":
+        G.add_edge(source, target, label=msg, color=color)
+        return
+
+    if opt.report_level == "warning":
+        if edge_type == "error" or edge_type == "warning":
+            G.add_edge(source, target, label=msg, color=color)
+            return
+
+    if opt.report_level == "info":
+        G.add_edge(source, target, label=msg, color=color)
+
+
+def do_good(current_project_name_version, opt):
     # for minimize string length
     ind = current_project_name_version
+    logger.debug("Processing {0}".format(ind.upper()))
 
     projects[ind] = Storage()
     projects[ind].name, projects[ind].ver = split_project_name_version(ind)
@@ -276,40 +300,21 @@ def do_good(current_project_name_version):
 
     for i in projects[ind].dep_projects:
         current = projects[ind].dep_projects[i]
-        # G.add_edge(ind, current.title)
 
         if current.ver == "master" or not current.ver:
             current.msg = "!F"
             current.is_fixed = False
-            G.add_edge(ind, current.title, label=current.msg, color='r')
+            add_edge(ind, current.title, current.msg, 'r', "error", opt)
         else:
             current.is_obsolete, current.new_ver = is_version_obsolete(current.name)
             if current.is_obsolete:
                 current.msg = "!T"
-                G.add_edge(ind, current.title, label=current.msg, color='y')
-
-        #else:
-            #G.add_edge(ind, current.title, label="", color='b')
-
-            #logger.error("\t{0:25s}{1:12s}{2:14s}{3:17s}{4:50s}".format(
-            #    current.name, current.ver, current.file, current.root_node, "Dependency is not fixed."))
-        #else:
-            #logger.debug("\t{0:25s}{1:12s}{2:14s}{3:17s}".format(
-            #    current.name, current.ver, current.file, current.root_node))
+                add_edge(ind, current.title, current.msg, 'y', "warning", opt)
+            else:
+                add_edge(ind, current.title, current.msg, 'b', "info", opt)
 
         if current.title not in projects:
-            logger.info("Start Parent {0}, Child {1}".format(ind, current.title))
-            do_good(current.title)
-            logger.info("Finish Parent {0}, Child {1}".format(ind, current.title))
-
-    #logger.info("Last tags from repo:")
-    #for i in dep_projects:
-    #    is_obsolete, dep_projects[i].new_ver = is_version_obsolete(dep_projects[i].name)
-    #    dep_projects[i].is_obsolete = not is_obsolete
-
-    # for p in projects:
-    #    current = projects[i]
-    #    G.add_edge(current_project_name, current.name + "_" + current.ver, label=current.msg, edge_color='r')
+            do_good(current.title, opt)
 
     """
     # Set new versions to package.json and bower.json without push to repo.
@@ -328,71 +333,74 @@ def main():
     if os.path.exists(logs_dir):
         shutil.rmtree(logs_dir)
         shutil.rmtree(projects_dir)
+        shutil.rmtree(diagrams_dir)
     os.makedirs(logs_dir)
     os.makedirs(projects_dir)
+    os.makedirs(diagrams_dir)
 
     set_log_configuration()
     options = parse_arguments()
 
     # Debug only
-    options.config = "./aks-dispatch.json"
-    options.config = "./night.json"
+    # options.config = "./aks-dispatch.json"
+    # options.config = "./night.json"
 
     config = get_config(options.config) if options.config else {}
+
+    if not options.applications and not options.config:
+        raise Exception("Application or configs is not defined in params")
 
     apps = [app for app in config['apps'] if app['name'] in options.applications] \
         if options.applications \
         else config['apps']
 
     for a in apps:
-        logger.info("START  {0}".format(a["name"].upper()))
-        do_good(a["name"].replace('_', '-'))
+        do_good(a["name"].replace('_', '-'), options)
 
+    # print report
+    for p in projects:
+        current = projects[p]
+        for d in current.dep_projects:
+            dep_cur = current.dep_projects[d]
+            if not dep_cur.is_fixed:
+                logger.error("{0:25s}{1:12s}{2:25s}{3:12s}{4:14s}{5:17s}{6:50s}".format(
+                    current.name, current.ver, dep_cur.name, dep_cur.ver, dep_cur.file, dep_cur.root_node,
+                    "Dependency is not fixed."))
+            elif dep_cur.is_obsolete:
+                logger.warning("{0:25s}{1:12s}{2:25s}{3:12s}{4:14s}{5:17s}{6:50s}".format(
+                    current.name, current.ver, dep_cur.name, dep_cur.ver, dep_cur.file, dep_cur.root_node,
+                    "Last commit is not tagged."))
+            else:
+                logger.debug("{0:25s}{1:12s}{2:25s}{3:12s}{4:14s}{5:17s}{6:50s}".format(
+                    current.name, current.ver, dep_cur.name, dep_cur.ver, dep_cur.file, dep_cur.root_node, ""))
 
+    # save network diagram, variant 1
+    dot_path = "{0}/graphviz.dot".format(diagrams_dir)
+    write_dot(G, dot_path)
+    os.system('dot -Tsvg {0} -o {1}/graphviz.svg'.format(dot_path, diagrams_dir))
 
-
-    # Bad
-    # spectral_layout(G)
-    # spring_layout(G, iterations=10)
-    # fruchterman_reingold_layout(G)
-
-    # SO-SO
-    # circular_layout(G, scale=5)
-    # shell_layout(G)
-
-    # GOOD
-    # kamada_kawai_layout(G) # need for scipy
-
-    write_dot(G, 'foo.dot')
-    os.system('dot -Tsvg foo.dot -o ./foo.svg')
-
-    pos = nx.shell_layout(G, scale=5)
+    # show network diagram, variant 2
+    pos = nx.shell_layout(G)
     nx.draw_networkx_nodes(G, pos, nodecolor='k', node_shape='o')
     nx.draw_networkx_labels(G, pos)
 
     edges = G.edges()
     colors = [G[u][v]['color'] for u, v in edges]
-    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color=colors)#, edge_color='b')
+    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color=colors)
 
-    #edge_labels = dict([((u, v,), d['label']) for u, v, d in G.edges(data=True)])
-    #nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+    # show edges labels, if needed
+    # edge_labels = dict([((u, v,), d['label']) for u, v, d in G.edges(data=True)])
+    # nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+
     plt.axis('off')
-    plt.show()
-    """
-    """
+    plt.savefig('{0}/networkx.png'.format(diagrams_dir), dpi=100)
 
-
+    if options.display_diag:
+        plt.show()
 
     err_count = logger.handlers[0].counts[logger_name]['ERROR']
     warn_count = logger.handlers[0].counts[logger_name]['WARNING']
-    logger.info("Work finished. Errors: {0}, Warnings: {1}\n".format(err_count, warn_count))
-
-
-"""
-====================================================================================
-====================================================================================
-====================================================================================
-"""
+    logger.info("Errors: {0}, Warnings: {1}\n".format(err_count, warn_count))
 
 
 if __name__ == '__main__':
