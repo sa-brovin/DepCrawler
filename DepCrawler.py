@@ -9,10 +9,7 @@ import shutil
 from collections import defaultdict
 
 # libraries
-#import plotly
-#import plotly.plotly as py
-#import plotly.graph_objs as go
-#from plotly.graph_objs import *
+from plotly.graph_objs import *
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -68,10 +65,14 @@ class MsgCounterHandler(logging.StreamHandler):
 
 
 def get_file_from_repo(project_name, ver, file_name):
+    project_path = "./{0}/{1}".format(projects_dir, project_name)
     if not ver:
         ver = "HEAD"
-    project_path = "./{0}/{1}".format(projects_dir, project_name+"_"+ver)
-    os.makedirs(project_path)
+    else:
+        project_path = "{0}_{1}".format(project_path, ver)
+
+    if not os.path.exists(project_path):
+        os.makedirs(project_path)
     file_path = "{0}/{1}".format(project_path, file_name)
     with open(file_path, 'a'):
         os.utime(file_path, None)
@@ -113,7 +114,8 @@ def is_last_commit_equal_last_tag(project_name, last_commit_sha):
 
 def is_version_obsolete(project_name):
     last_commit = get_last_commit(project_name)
-    return is_last_commit_equal_last_tag(project_name, last_commit)
+    is_obsolete, ver = is_last_commit_equal_last_tag(project_name, last_commit)
+    return not is_obsolete, ver
 
 
 # endregion
@@ -142,8 +144,12 @@ def get_dependency_projects_from_repo(path_to_repo, json_path, dependency_root_n
         r.ver = match.group(2)
         r.file = json_path
         r.root_node = dependency_root_node
-        r.title = r.name+"_"+r.ver
-        dep_projects[r.name+"_"+r.ver] = r
+        if not r.ver or r.ver == "master":
+            r.title = r.name
+            dep_projects[r.name] = r
+        else:
+            r.title = r.name+"_"+r.ver
+            dep_projects[r.name+"_"+r.ver] = r
     return dep_projects
 
 
@@ -249,12 +255,14 @@ def get_dependency_projects(current_project_name_version):
     res = get_file_from_repo(projects[ind].name, projects[ind].ver, "package.json")
     res = get_file_from_repo(projects[ind].name, projects[ind].ver, "bower.json")
 
-
     # logger.info("Current dependency: ")
     local_path_to_repo = "./{0}/{1}".format(projects_dir, ind)
-    dep_projects = merge_two_dicts(get_dependency_projects_from_repo(local_path_to_repo, "package.json", pack_dep_node_name),
-                                   get_dependency_projects_from_repo(local_path_to_repo, "package.json", pack_devDep_node_name))
-    return merge_two_dicts(dep_projects, get_dependency_projects_from_repo(local_path_to_repo, "bower.json", pack_dep_node_name))
+    dep_projects = merge_two_dicts(get_dependency_projects_from_repo(local_path_to_repo,
+                                                                     "package.json", pack_dep_node_name),
+                                   get_dependency_projects_from_repo(local_path_to_repo,
+                                                                     "package.json", pack_devDep_node_name))
+    return merge_two_dicts(dep_projects, get_dependency_projects_from_repo(local_path_to_repo,
+                                                                           "bower.json", pack_dep_node_name))
 
 
 def do_good(current_project_name_version):
@@ -264,17 +272,24 @@ def do_good(current_project_name_version):
     projects[ind] = Storage()
     projects[ind].name, projects[ind].ver = split_project_name_version(ind)
     projects[ind].title = ind
-    projects[ind].dep_projects = get_dependency_projects()
+    projects[ind].dep_projects = get_dependency_projects(ind)
 
     for i in projects[ind].dep_projects:
         current = projects[ind].dep_projects[i]
-        current.title = "{}_{}".format(current.name, current.ver)
+        # G.add_edge(ind, current.title)
 
         if current.ver == "master" or not current.ver:
-            current.msg = "not fixed"
+            current.msg = "!F"
             current.is_fixed = False
-            # G.add_edge(cur_dict_ind, current.name + "_" + current.ver, label=current.msg, edge_color='r')
-            G.add_edge(ind, current.name + "_" + current.ver)
+            G.add_edge(ind, current.title, label=current.msg, color='r')
+        else:
+            current.is_obsolete, current.new_ver = is_version_obsolete(current.name)
+            if current.is_obsolete:
+                current.msg = "!T"
+                G.add_edge(ind, current.title, label=current.msg, color='y')
+
+        #else:
+            #G.add_edge(ind, current.title, label="", color='b')
 
             #logger.error("\t{0:25s}{1:12s}{2:14s}{3:17s}{4:50s}".format(
             #    current.name, current.ver, current.file, current.root_node, "Dependency is not fixed."))
@@ -321,7 +336,7 @@ def main():
 
     # Debug only
     options.config = "./aks-dispatch.json"
-    options.config = "./night2.json"
+    options.config = "./night.json"
 
     config = get_config(options.config) if options.config else {}
 
@@ -354,7 +369,10 @@ def main():
     pos = nx.shell_layout(G, scale=5)
     nx.draw_networkx_nodes(G, pos, nodecolor='k', node_shape='o')
     nx.draw_networkx_labels(G, pos)
-    nx.draw_networkx_edges(G, pos, edgelist=G.edges)#, edge_color='b')
+
+    edges = G.edges()
+    colors = [G[u][v]['color'] for u, v in edges]
+    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color=colors)#, edge_color='b')
 
     #edge_labels = dict([((u, v,), d['label']) for u, v, d in G.edges(data=True)])
     #nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
