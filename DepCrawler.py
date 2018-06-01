@@ -199,7 +199,6 @@ def parse_arguments():
                         help='Show diagram.')
 
     parser.add_argument('applications', nargs='*', help='Limit applications from config to build')
-    parser.print_help()
     return parser.parse_args()
 
 
