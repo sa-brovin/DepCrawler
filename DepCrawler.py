@@ -9,10 +9,11 @@ import re
 from collections import defaultdict
 
 # graph libraries
+import matplotlib
+matplotlib.use('Agg')
 from plotly.graph_objs import *
 import networkx as nx
 import matplotlib.pyplot as plt
-import matplotlib
 from networkx.drawing.nx_agraph import write_dot
 
 pack_dep_node_name = "dependencies"
@@ -404,5 +405,4 @@ def main():
 
 
 if __name__ == '__main__':
-    matplotlib.use('Agg')
     main()
