@@ -3,6 +3,9 @@ Show report about dependencies between gitlab projects. Optionally can display 2
 
 ## Dependencies
 - python 3.4+
+- plotly
+- python3-tk
+- python-pygraphviz
 - networkx
 - matplotlib
 
