@@ -12,6 +12,7 @@ from collections import defaultdict
 from plotly.graph_objs import *
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib
 from networkx.drawing.nx_agraph import write_dot
 
 pack_dep_node_name = "dependencies"
